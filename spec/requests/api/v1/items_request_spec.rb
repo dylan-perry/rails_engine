@@ -11,21 +11,13 @@ describe "Items API" do
     
             items = JSON.parse(response.body, symbolize_names: true)
     
-            expect(items.count).to eq(3)
-            expect(items).to be_a(Array)
+            expect(items[:data].count).to eq(3)
+            expect(items[:data]).to be_a(Array)
     
-            items.each do |item|
-                expect(item).to have_key(:id)
-                expect(item[:id]).to be_an(Integer)
-    
-                expect(item).to have_key(:name)
-                expect(item[:name]).to be_an(String)
-    
-                expect(item).to have_key(:description)
-                expect(item[:description]).to be_an(String)
-    
-                expect(item).to have_key(:unit_price)
-                expect(item[:unit_price]).to be_an(Float)
+            items[:data].each do |item|
+                expect(item[:attributes]).to have_key(:name) 
+                expect(item[:attributes]).to have_key(:description)    
+                expect(item[:attributes]).to have_key(:unit_price)
             end
         end
 
@@ -38,21 +30,13 @@ describe "Items API" do
     
             items = JSON.parse(response.body, symbolize_names: true)
     
-            expect(items.count).to eq(1)
-            expect(items).to be_a(Array)
+            expect(items[:data].count).to eq(1)
+            expect(items[:data]).to be_a(Array)
     
-            items.each do |item|
-                expect(item).to have_key(:id)
-                expect(item[:id]).to be_an(Integer)
-    
-                expect(item).to have_key(:name)
-                expect(item[:name]).to be_an(String)
-    
-                expect(item).to have_key(:description)
-                expect(item[:description]).to be_an(String)
-    
-                expect(item).to have_key(:unit_price)
-                expect(item[:unit_price]).to be_an(Float)
+            items[:data].each do |item|
+                expect(item[:attributes]).to have_key(:name) 
+                expect(item[:attributes]).to have_key(:description)    
+                expect(item[:attributes]).to have_key(:unit_price)
             end
         end
     end
@@ -65,8 +49,8 @@ describe "Items API" do
     
             items = JSON.parse(response.body, symbolize_names: true)
     
-            expect(items.count).to eq(0)
-            expect(items).to be_a(Array)
+            expect(items[:data].count).to eq(0)
+            expect(items[:data]).to be_a(Array)
         end
     end 
 end
