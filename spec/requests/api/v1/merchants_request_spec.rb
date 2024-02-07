@@ -23,18 +23,35 @@ RSpec.describe 'Merchants API' do
 
   # US 2
   describe 'Merchant Show' do
-    it 'returns one merchant' do
-      merchant1 = create(:merchant)
+    describe 'happy path' do
+      it 'returns one merchant' do
+        merchant1 = create(:merchant)
 
-      get "/api/v1/merchants/#{merchant1.id}"
+        get "/api/v1/merchants/#{merchant1.id}"
 
-      expect(response).to be_successful
+        expect(response).to be_successful
 
-      merchant = JSON.parse(response.body, symbolize_names: true)
+        merchant = JSON.parse(response.body, symbolize_names: true)
 
-      expect(merchant.count).to eq(1)
-      expect(merchant[:data][:attributes]).to have_key(:name)
-      expect(merchant[:data][:attributes][:name]).to be_an(String)
+        expect(merchant.count).to eq(1)
+        expect(merchant[:data][:attributes]).to have_key(:name)
+        expect(merchant[:data][:attributes][:name]).to be_an(String)
+      end
+    end
+
+    describe 'sad path' do
+      it 'returns a 404 if merchant is not found' do
+        get "/api/v1/merchants/1"
+
+        expect(response).to_not be_successful
+        expect(response.status).to eq(404)
+
+        data = JSON.parse(response.body, symbolize_names: true)
+        
+        expect(data[:errors]).to be_a(Array)
+        expect(data[:errors].first[:status]).to eq("404")
+        expect(data[:errors].first[:title]).to eq("Couldn't find Merchant with 'id'=1")
+      end
     end
   end
 
