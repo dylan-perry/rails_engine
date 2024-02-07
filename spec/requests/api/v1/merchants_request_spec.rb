@@ -11,13 +11,30 @@ RSpec.describe 'Merchants API' do
       expect(response).to be_successful
 
       merchants = JSON.parse(response.body, symbolize_names: true)
-# require 'pry';binding.pry
+
       expect(merchants[:data].count).to eq(3)
 
       merchants[:data].each do |merchant|
         expect(merchant[:attributes]).to have_key(:name)
         expect(merchant[:attributes][:name]).to be_an(String)
       end
+    end
+  end
+
+  # US 2
+  describe 'Merchant Show' do
+    it 'returns one merchant' do
+      merchant1 = create(:merchant)
+
+      get "/api/v1/merchants/#{merchant1.id}"
+
+      expect(response).to be_successful
+
+      merchant = JSON.parse(response.body, symbolize_names: true)
+
+      expect(merchant.count).to eq(1)
+      expect(merchant[:data][:attributes]).to have_key(:name)
+      expect(merchant[:data][:attributes][:name]).to be_an(String)
     end
   end
 end
