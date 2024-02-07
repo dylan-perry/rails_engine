@@ -14,7 +14,9 @@ Rails.application.routes.draw do
         resources :items, only: [:index, :show], module: :merchants # module block to scope the items controller under merchants 
       end 
       
-      resources :items, only: [:index, :show, :create]
+      resources :items, only: [:index, :show, :create] do
+        resources :merchant, only: [:index], module: :items
+      end
     end
   end
 end
