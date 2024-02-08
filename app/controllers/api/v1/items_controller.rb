@@ -22,6 +22,16 @@ class Api::V1::ItemsController < ApplicationController
     end
   end
 
+  def update
+    # Check to see if a merchant_id has been passed (to preserve partial updates)
+    # If so, error out if merchant doesn't exist
+    if item_params[:merchant_id]
+      return unless check_merchant_exists(item_params[:merchant_id])
+    end
+
+    render json: ItemSerializer.new(Item.update!(params[:id], item_params))
+  end
+
   def destroy
     item = Item.find(params[:id].to_i)
 

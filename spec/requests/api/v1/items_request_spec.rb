@@ -93,10 +93,17 @@ describe "Items API" do
                 expect(item.count).to eq(1)
                 expect(item[:data]).to be_a(Hash)
 
-                expect(item[:data][:attributes]).to have_key(:name) 
-                expect(item[:data][:attributes]).to have_key(:description)    
+                expect(item[:data][:attributes]).to have_key(:name)
+                expect(item[:data][:attributes][:name]).to be_an(String)
+
+                expect(item[:data][:attributes]).to have_key(:description)
+                expect(item[:data][:attributes][:description]).to be_an(String)
+
                 expect(item[:data][:attributes]).to have_key(:unit_price)
+                expect(item[:data][:attributes][:unit_price]).to be_an(Float)
+                
                 expect(item[:data][:attributes]).to have_key(:merchant_id)
+                expect(item[:data][:attributes][:merchant_id]).to be_an(Integer)
             end
         end
         
@@ -183,6 +190,113 @@ describe "Items API" do
         end
       end
     end
+
+    # US 7
+    describe "update an item" do
+        describe "happy path" do
+            it "can update an existing item" do
+              merchant = create(:merchant, id: 1)
+
+              item = create(:item, id: 1, name: 'Ben & Jerrys', description: 'Ice Cream', unit_price: 4.99, merchant_id: 1)
+
+              expect(item.name).to eq('Ben & Jerrys')
+              expect(item.description).to eq('Ice Cream')
+              expect(item.unit_price).to eq(4.99)
+
+              # include header to make sure params are passed as JSON rather than as plain text
+              headers = {"CONTENT_TYPE" => "application/json"}
+
+              new_item_params = ({
+                                    name: 'Crowbar',
+                                    description: 'Packaging Tool',
+                                    unit_price: 9.50,
+                                    merchant_id: 1
+                                })
+
+              put "/api/v1/items/#{item.id}", headers: headers, params: JSON.generate(item: new_item_params)
+
+              item.reload
+            
+              expect(response).to be_successful
+    
+              expect(item.name).to eq(new_item_params[:name])
+              expect(item.name).to be_a(String)
+    
+              expect(item.description).to eq(new_item_params[:description])
+              expect(item.description).to be_a(String)
+    
+              expect(item.unit_price).to eq(new_item_params[:unit_price])
+              expect(item.unit_price).to be_a(Float)
+    
+              expect(item.merchant_id).to eq(new_item_params[:merchant_id])
+              expect(item.merchant_id).to be_a(Integer)
+          end
+
+          it "updates an item when given only partial data" do
+            merchant = create(:merchant, id: 1)
+
+            item = create(:item, id: 1, name: 'Ben & Jerrys', description: 'Ice Cream', unit_price: 4.99, merchant_id: 1)
+
+            expect(item.name).to eq('Ben & Jerrys')
+            expect(item.description).to eq('Ice Cream')
+            expect(item.unit_price).to eq(4.99)
+
+            # include header to make sure params are passed as JSON rather than as plain text
+            headers = {"CONTENT_TYPE" => "application/json"}
+
+            new_item_params = ({
+                                  name: 'Crowbar',
+                                  description: 'Packaging Tool'
+                              })
+
+            put "/api/v1/items/#{item.id}", headers: headers, params: JSON.generate(item: new_item_params)
+
+            item.reload
+          
+            expect(response).to be_successful
+  
+            expect(item.name).to eq(new_item_params[:name])
+            expect(item.name).to be_a(String)
+  
+            expect(item.description).to eq(new_item_params[:description])
+            expect(item.description).to be_a(String)
+  
+            expect(item.unit_price).to eq(4.99)
+            expect(item.unit_price).to be_a(Float)
+  
+            expect(item.merchant_id).to eq(1)
+            expect(item.merchant_id).to be_a(Integer)
+          end
+        end
+  
+        describe "sad path" do
+           it 'returns a 404 when trying to update to a non-existent merchant' do
+            merchant = create(:merchant, id: 1)
+
+            item = create(:item, id: 1, name: 'Ben & Jerrys', description: 'Ice Cream', unit_price: 4.99, merchant_id: 1)
+
+            headers = {"CONTENT_TYPE" => "application/json"}
+
+            new_item_params = ({
+              name: 'Crowbar',
+              description: 'Packaging Tool',
+              unit_price: 9.50,
+              merchant_id: 999999
+              })
+
+            put "/api/v1/items/#{item.id}", headers: headers, params: JSON.generate(item: new_item_params)
+    
+            expect(response).to_not be_successful
+            expect(response.status).to eq(404)
+  
+            data = JSON.parse(response.body, symbolize_names: true)
+            
+            expect(data[:errors]).to be_a(Array)
+            expect(data[:errors].first[:status]).to eq("404")
+            expect(data[:errors].first[:title]).to eq("Couldn't find Merchant with 'id'=999999")
+          end
+        end
+      end
 
     # US 8
     describe "delete an item" do
