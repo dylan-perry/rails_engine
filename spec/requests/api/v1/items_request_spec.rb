@@ -85,7 +85,7 @@ describe "Items API" do
     end
 
     # US 6
-    describe "create" do
+    describe "create an item" do
       describe "happy path" do
          it "can create a new item" do
           merchant = create(:merchant, id: 1)
@@ -131,6 +131,17 @@ describe "Items API" do
           expect(data[:errors].first[:status]).to eq("404")
           expect(data[:errors].first[:title]).to eq("Couldn't find Merchant with 'id'=1")
         end
+      end
+    end
+
+    # US 8
+    describe "delete an item" do
+      describe "happy path" do
+
+      end
+
+      describe "sad path" do
+        
       end
     end
 end
