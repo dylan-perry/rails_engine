@@ -14,12 +14,8 @@ class Api::V1::ItemsController < ApplicationController
     return unless check_merchant_exists(item_params[:merchant_id])
 
     item = Item.new(item_params)
-    if item.save
-      render json: ItemSerializer.new(item), status: :created
-    else
-      error_message = ErrorMessage.new(item.errors.full_messages.join(', '), 422)
-      render json: ErrorSerializer.new(error_message).serialize_json, status: :unprocessable_entity
-    end
+    item.save!  # This will raise ActiveRecord::RecordInvalid if the item is invalid
+    render json: ItemSerializer.new(item), status: :created
   end
 
   def destroy
