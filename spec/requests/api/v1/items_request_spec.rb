@@ -106,7 +106,7 @@ describe "Items API" do
     end
 
     # US 6
-    describe "create" do
+    describe "create an item" do
       describe "happy path" do
          it "can create a new item" do
           merchant = create(:merchant, id: 1)
@@ -141,7 +141,14 @@ describe "Items API" do
 
       describe "sad path" do
          it 'returns a 404 if merchant is not found' do
-          get '/api/v1/merchants/1/items'
+          item_params = ({
+                          name: 'Ben & Jerrys',
+                          description: 'Ice Cream',
+                          unit_price: 4.99
+                        })
+          headers = {"CONTENT_TYPE" => "application/json"}
+
+          post '/api/v1/items', headers: headers, params: JSON.generate(item: item_params)
 
           expect(response).to_not be_successful
           expect(response.status).to eq(404)
@@ -150,7 +157,69 @@ describe "Items API" do
           
           expect(data[:errors]).to be_a(Array)
           expect(data[:errors].first[:status]).to eq("404")
-          expect(data[:errors].first[:title]).to eq("Couldn't find Merchant with 'id'=1")
+          expect(data[:errors].first[:title]).to eq("Couldn't find Merchant without an ID")
+        end
+
+        it 'returns a 422 if item attribute is missing' do
+          merchant = create(:merchant, id: 1)
+
+          item_params = ({
+                          name: 'Ben & Jerrys',
+                          unit_price: 4.99,
+                          merchant_id: 1
+                        })
+          headers = {"CONTENT_TYPE" => "application/json"}
+
+          post '/api/v1/items', headers: headers, params: JSON.generate(item: item_params)
+
+          expect(response).to_not be_successful
+          expect(response.status).to eq(422)
+
+          data = JSON.parse(response.body, symbolize_names: true)
+          
+          expect(data[:errors]).to be_a(Array)
+          expect(data[:errors].first[:status]).to eq("422")
+          expect(data[:errors].first[:title]).to eq("Description can't be blank")
+        end
+      end
+    end
+
+    # US 8
+    describe "delete an item" do
+      describe "happy path" do
+        it 'can destroy an item' do
+          create(:merchant, id: 1)
+          item = create(:item, id: 2, merchant_id: 1)
+  
+          expect(Item.count).to eq(1)
+        
+          delete "/api/v1/items/#{item.id}"
+        
+          expect(response.status).to eq(204)
+          expect(Item.count).to eq(0)
+          expect{Item.find(item.id)}.to raise_error(ActiveRecord::RecordNotFound)
+        end
+
+        it 'deletes associated data when an item is destroyed' do
+          customer = create(:customer)
+          merchant = create(:merchant)
+          item = create(:item, merchant: merchant)
+          invoice = create(:invoice, customer: customer, merchant: merchant)
+          invoice_item = create(:invoice_item, item: item, invoice: invoice)
+
+          expect(InvoiceItem.count).to eq(1)
+
+          delete "/api/v1/items/#{item.id}"
+
+          expect(InvoiceItem.count).to eq(0)
+        end
+      end
+
+      describe "sad path" do
+        it 'returns a 404 if the item does not exist' do
+          delete '/api/v1/items/999999'  
+    
+          expect(response.status).to eq(404)
         end
       end
     end
