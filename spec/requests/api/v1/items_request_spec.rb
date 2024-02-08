@@ -340,39 +340,69 @@ describe "Items API" do
     
     # US 9
     describe 'Item Merchant Index' do 
-        describe 'Happy Path' do
-          it 'returns the merchant associated with an item' do
-            merchant_1 = create(:merchant, id: 1)
-            merchant_2 = create(:merchant, id: 2)
-            
-            item_1 = create(:item, id: 1, merchant_id: 1)
-            item_2 = create(:item, id: 2, merchant_id: 1)
-            item_3 = create(:item, id: 3, merchant_id: 2)
-    
-            get '/api/v1/items/1/merchant'
-    
-            expect(response).to be_successful
-    
-            merchant = JSON.parse(response.body, symbolize_names: true)
-    
-            expect(merchant[:data][:attributes]).to have_key(:name)
-            expect(merchant[:data][:attributes][:name]).to be_an(String)
-          end
-        end
-    
-        describe 'sad path' do
-          it 'returns a 404 status code if a merchant is not found' do
-            get "/api/v1/items/1/merchant"
-    
-            expect(response).to_not be_successful
-            expect(response.status).to eq(404)
-    
-            data = JSON.parse(response.body, symbolize_names: true)
-    
-            expect(data[:errors]).to be_a(Array)
-            expect(data[:errors].first[:status]).to eq("404")
-            expect(data[:errors].first[:title]).to eq("Couldn't find Item with 'id'=1")
-          end
+      describe 'Happy Path' do
+        it 'returns the merchant associated with an item' do
+          merchant_1 = create(:merchant, id: 1)
+          merchant_2 = create(:merchant, id: 2)
+          
+          item_1 = create(:item, id: 1, merchant_id: 1)
+          item_2 = create(:item, id: 2, merchant_id: 1)
+          item_3 = create(:item, id: 3, merchant_id: 2)
+  
+          get '/api/v1/items/1/merchant'
+  
+          expect(response).to be_successful
+  
+          merchant = JSON.parse(response.body, symbolize_names: true)
+  
+          expect(merchant[:data][:attributes]).to have_key(:name)
+          expect(merchant[:data][:attributes][:name]).to be_an(String)
         end
       end
+  
+      describe 'sad path' do
+        it 'returns a 404 status code if a merchant is not found' do
+          get "/api/v1/items/1/merchant"
+  
+          expect(response).to_not be_successful
+          expect(response.status).to eq(404)
+  
+          data = JSON.parse(response.body, symbolize_names: true)
+  
+          expect(data[:errors]).to be_a(Array)
+          expect(data[:errors].first[:status]).to eq("404")
+          expect(data[:errors].first[:title]).to eq("Couldn't find Item with 'id'=1")
+        end
+      end
+    end
+
+    # US 10
+    describe 'Find One Item' do
+      describe 'Happy Path' do
+        it 'can find a single item that matches a search term' do
+          merchant1 = create(:merchant, id: 1)
+          merchant2 = create(:merchant, id: 2)
+          merchant3 = create(:merchant, id: 3)
+
+          item1 = Item.create!(name: 'Hersheys', description: 'Candy', unit_price: 3.99, id: 1, merchant_id: 1)
+          item1 = Item.create!(name: 'Slim Jim', description: 'Jerky', unit_price: 2.99, id: 2, merchant_id: 1)
+          item1 = Item.create!(name: 'Nerds', description: 'Candy', unit_price: 1.99, id: 3, merchant_id: 2)
+          item1 = Item.create!(name: 'Mars', description: 'Candy', unit_price: 5.99, id: 4, merchant_id: 3)
+
+          get '/api/v1/items/find'
+
+          expect(response).to be_successful
+
+          item = JSON.parse(response.body, symbolize_names: true)
+
+          # expect(item.count).to eq(1)
+          # expect(item[:data]).to be_a(Hash)
+
+          # expect(item[:data][:attributes]).to have_key(:name) 
+          # expect(item[:data][:attributes]).to have_key(:description)    
+          # expect(item[:data][:attributes]).to have_key(:unit_price)
+          # expect(item[:data][:attributes]).to have_key(:merchant_id)
+        end
+      end
+    end
 end
