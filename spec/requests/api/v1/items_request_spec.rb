@@ -1,10 +1,13 @@
 require 'rails_helper'
 
 describe "Items API" do
+    # US 4
     describe "index" do
         describe "happy path" do
             it "sends a list of items (when item count > 1)" do
-                create_list(:item, 3)
+                merchant = create(:merchant, id: 1)
+
+                create_list(:item, 3, merchant_id: 1)
         
                 get '/api/v1/items'
         
@@ -16,16 +19,24 @@ describe "Items API" do
                 expect(items[:data]).to be_a(Array)
         
                 items[:data].each do |item|
-                    expect(item[:attributes]).to have_key(:name) 
-                    expect(item[:attributes]).to have_key(:description)    
+                    expect(item[:attributes]).to have_key(:name)
+                    expect(item[:attributes][:name]).to be_an(String)
+
+                    expect(item[:attributes]).to have_key(:description)
+                    expect(item[:attributes][:description]).to be_an(String)
+
                     expect(item[:attributes]).to have_key(:unit_price)
+                    expect(item[:attributes][:unit_price]).to be_an(Float)
+
                     expect(item[:attributes]).to have_key(:merchant_id)
+                    expect(item[:attributes][:merchant_id]).to be_an(Integer)
                 end
             end
 
             it "sends a list of items (when item count == 1)" do
-                create_list(:item, 1)
+                merchant = create(:merchant, id: 1)
 
+                create_list(:item, 1, merchant_id: 1)
                 get '/api/v1/items'
         
                 expect(response).to be_successful
@@ -36,10 +47,17 @@ describe "Items API" do
                 expect(items[:data]).to be_a(Array)
         
                 items[:data].each do |item|
-                    expect(item[:attributes]).to have_key(:name) 
-                    expect(item[:attributes]).to have_key(:description)    
+                    expect(item[:attributes]).to have_key(:name)
+                    expect(item[:attributes][:name]).to be_an(String)
+
+                    expect(item[:attributes]).to have_key(:description)
+                    expect(item[:attributes][:description]).to be_an(String)
+
                     expect(item[:attributes]).to have_key(:unit_price)
+                    expect(item[:attributes][:unit_price]).to be_an(Float)
+
                     expect(item[:attributes]).to have_key(:merchant_id)
+                    expect(item[:attributes][:merchant_id]).to be_an(Integer)
                 end
             end
         end
@@ -58,10 +76,13 @@ describe "Items API" do
         end
     end
 
+    # US 5
     describe "show" do
         describe "happy path" do
             it "sends a single item" do
-                create(:item, id: 1)
+                merchant = create(:merchant, id: 1)
+
+                create(:item, id: 1, merchant_id: 1)
 
                 get '/api/v1/items/1'
 
@@ -133,4 +154,42 @@ describe "Items API" do
         end
       end
     end
+    
+    # US 9
+    describe 'Item Merchant Index' do 
+        describe 'Happy Path' do
+          it 'returns the merchant associated with an item' do
+            merchant_1 = create(:merchant, id: 1)
+            merchant_2 = create(:merchant, id: 2)
+            
+            item_1 = create(:item, id: 1, merchant_id: 1)
+            item_2 = create(:item, id: 2, merchant_id: 1)
+            item_3 = create(:item, id: 3, merchant_id: 2)
+    
+            get '/api/v1/items/1/merchant'
+    
+            expect(response).to be_successful
+    
+            merchant = JSON.parse(response.body, symbolize_names: true)
+    
+            expect(merchant[:data][:attributes]).to have_key(:name)
+            expect(merchant[:data][:attributes][:name]).to be_an(String)
+          end
+        end
+    
+        describe 'sad path' do
+          it 'returns a 404 status code if a merchant is not found' do
+            get "/api/v1/items/1/merchant"
+    
+            expect(response).to_not be_successful
+            expect(response.status).to eq(404)
+    
+            data = JSON.parse(response.body, symbolize_names: true)
+    
+            expect(data[:errors]).to be_a(Array)
+            expect(data[:errors].first[:status]).to eq("404")
+            expect(data[:errors].first[:title]).to eq("Couldn't find Item with 'id'=1")
+          end
+        end
+      end
 end
