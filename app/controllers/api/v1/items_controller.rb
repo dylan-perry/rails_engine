@@ -23,10 +23,17 @@ class Api::V1::ItemsController < ApplicationController
   end
 
   def destroy
-    # require 'pry';binding.pry
     item = Item.find(params[:id].to_i)
-    render json: item.destroy
-    # render json: BookSerializer.new(item)
+
+    item.invoices.each do |invoice|
+      if invoice.invoice_items.count == 1
+        invoice.invoice_items.destroy_all  # Destroys associated invoice items first
+        invoice.destroy
+      end
+    end
+
+    item.destroy
+    head :no_content # sends a 204 no content response
   end
 
 private

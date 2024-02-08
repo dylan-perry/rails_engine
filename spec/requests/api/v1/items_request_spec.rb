@@ -187,7 +187,7 @@ describe "Items API" do
     # US 8
     describe "delete an item" do
       describe "happy path" do
-        xit 'can destroy an item' do
+        it 'can destroy an item' do
           create(:merchant, id: 1)
           item = create(:item, id: 2, merchant_id: 1)
   
@@ -199,24 +199,28 @@ describe "Items API" do
           expect(Item.count).to eq(0)
           expect{Item.find(item.id)}.to raise_error(ActiveRecord::RecordNotFound)
         end
+
+        it 'deletes associated data when an item is destroyed' do
+          customer = create(:customer)
+          merchant = create(:merchant)
+          item = create(:item, merchant: merchant)
+          invoice = create(:invoice, customer: customer, merchant: merchant)
+          invoice_item = create(:invoice_item, item: item, invoice: invoice)
+
+          expect(InvoiceItem.count).to eq(1)
+
+          delete "/api/v1/items/#{item.id}"
+
+          expect(InvoiceItem.count).to eq(0)
+        end
       end
 
-      # it "can destroy a marketvendor association" do
-      #   market = create(:market)
-      #   vendor = create(:vendor)
-        
-      #   market_vendor = MarketVendor.create!(market_id: market.id, vendor_id: vendor.id)
-      #   expect(MarketVendor.count).to eq(1)
-  
-      #   delete "/api/v0/market_vendors", params: { market_id: market.id, vendor_id: vendor.id}
-  
-      #   expect(response.status).to eq(204)
-      #   expect(MarketVendor.count).to eq(0)
-      #   expect{MarketVendor.find(market_vendor.id)}.to raise_error(ActiveRecord::RecordNotFound)
-      # end
-
       describe "sad path" do
-        
+        it 'returns a 404 if the item does not exist' do
+          delete '/api/v1/items/999999'  
+    
+          expect(response.status).to eq(404)
+        end
       end
     end
     
