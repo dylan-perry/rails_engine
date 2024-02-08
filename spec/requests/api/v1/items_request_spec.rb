@@ -379,29 +379,36 @@ describe "Items API" do
     # US 10
     describe 'Find One Item' do
       describe 'Happy Path' do
-        it 'can find a single item that matches a search term' do
+        it 'can find the first item in the database in case-insensitive alphabetical order if multiple matches are found (including partial names)' do
           merchant1 = create(:merchant, id: 1)
           merchant2 = create(:merchant, id: 2)
           merchant3 = create(:merchant, id: 3)
 
-          item1 = Item.create!(name: 'Hersheys', description: 'Candy', unit_price: 3.99, id: 1, merchant_id: 1)
-          item1 = Item.create!(name: 'Slim Jim', description: 'Jerky', unit_price: 2.99, id: 2, merchant_id: 1)
-          item1 = Item.create!(name: 'Nerds', description: 'Candy', unit_price: 1.99, id: 3, merchant_id: 2)
-          item1 = Item.create!(name: 'Mars', description: 'Candy', unit_price: 5.99, id: 4, merchant_id: 3)
+          item1 = Item.create!(name: 'Hersheys Chocolate', description: 'Candy', unit_price: 3.99, id: 1, merchant_id: 1)
+          item2 = Item.create!(name: 'Slim Jim', description: 'Jerky', unit_price: 2.99, id: 2, merchant_id: 1)
+          item3 = Item.create!(name: 'Nerds', description: 'Candy', unit_price: 1.99, id: 3, merchant_id: 2)
+          item4 = Item.create!(name: 'Mars Chocolate', description: 'Candy', unit_price: 5.99, id: 4, merchant_id: 3)
 
-          get '/api/v1/items/find'
+          get '/api/v1/items/find?name=choco'
 
           expect(response).to be_successful
 
           item = JSON.parse(response.body, symbolize_names: true)
 
-          # expect(item.count).to eq(1)
-          # expect(item[:data]).to be_a(Hash)
+          expect(item.count).to eq(1)
+          expect(item[:data]).to be_a(Hash)
 
-          # expect(item[:data][:attributes]).to have_key(:name) 
-          # expect(item[:data][:attributes]).to have_key(:description)    
-          # expect(item[:data][:attributes]).to have_key(:unit_price)
-          # expect(item[:data][:attributes]).to have_key(:merchant_id)
+          expect(item[:data][:attributes]).to have_key(:name)
+          expect(item[:data][:attributes].name).to be("Hersheys Chocolate")
+
+          expect(item[:data][:attributes]).to have_key(:description)
+          expect(item[:data][:attributes].description).to be("Candy")
+
+          expect(item[:data][:attributes]).to have_key(:unit_price)
+          expect(item[:data][:attributes].unit_price).to be(3.99)
+
+          expect(item[:data][:attributes]).to have_key(:merchant_id)
+          expect(item[:data][:attributes].merchant_id).to be(1)
         end
       end
     end
