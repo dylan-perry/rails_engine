@@ -17,8 +17,6 @@ Rails.application.routes.draw do
       resources :items, only: [:index, :show, :create, :update, :destroy] do
         resources :merchant, only: [:index], module: :items
       end
-
-      get '/items/find', to: 'items/search#find', module: :items
     end
   end
 end
