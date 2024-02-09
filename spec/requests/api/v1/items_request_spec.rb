@@ -456,6 +456,74 @@ describe "Items API" do
           expect(item[:data][:attributes]).to have_key(:merchant_id)
           expect(item[:data][:attributes][:merchant_id]).to eq(3)
         end
+
+        it 'can find the first item matching a min_price attribute in case-insensitive alphabetical order' do
+          merchant1 = create(:merchant, id: 1)
+          merchant2 = create(:merchant, id: 2)
+          merchant3 = create(:merchant, id: 3)
+
+          item1 = Item.create!(name: 'Hersheys Chocolate', description: 'Candy', unit_price: 3.99, id: 1, merchant_id: 1)
+          item2 = Item.create!(name: 'Slim Jim', description: 'Jerky', unit_price: 2.99, id: 2, merchant_id: 1)
+          item3 = Item.create!(name: 'Nerds', description: 'Candy', unit_price: 1.99, id: 3, merchant_id: 2)
+          item4 = Item.create!(name: 'Mars Chocolate', description: 'Candy', unit_price: 7.99, id: 4, merchant_id: 3)
+          item5 = Item.create!(name: 'Abba Zabba', description: 'Weird', unit_price: 5.99, id: 5, merchant_id: 3)
+          item6 = Item.create!(name: 'Sour Patch Watermelons', description: 'Dank', unit_price: 7.99, id: 6, merchant_id: 3)
+
+          get '/api/v1/items/find?max_price=2.50'
+
+          expect(response).to be_successful
+
+          item = JSON.parse(response.body, symbolize_names: true)
+
+          expect(item.count).to eq(1)
+          expect(item[:data]).to be_a(Hash)
+
+          expect(item[:data][:attributes]).to have_key(:name)
+          expect(item[:data][:attributes][:name]).to eq("Nerds")
+
+          expect(item[:data][:attributes]).to have_key(:description)
+          expect(item[:data][:attributes][:description]).to eq("Candy")
+
+          expect(item[:data][:attributes]).to have_key(:unit_price)
+          expect(item[:data][:attributes][:unit_price]).to eq(1.99)
+
+          expect(item[:data][:attributes]).to have_key(:merchant_id)
+          expect(item[:data][:attributes][:merchant_id]).to eq(2)
+        end
+
+        it 'can find the first item with a unit price between a min and max price query, in case-insensitive alphabetical order' do
+          merchant1 = create(:merchant, id: 1)
+          merchant2 = create(:merchant, id: 2)
+          merchant3 = create(:merchant, id: 3)
+
+          item1 = Item.create!(name: 'Hersheys Chocolate', description: 'Candy', unit_price: 3.99, id: 1, merchant_id: 1)
+          item2 = Item.create!(name: 'Slim Jim', description: 'Jerky', unit_price: 2.99, id: 2, merchant_id: 1)
+          item3 = Item.create!(name: 'Nerds', description: 'Candy', unit_price: 1.99, id: 3, merchant_id: 2)
+          item4 = Item.create!(name: 'Mars Chocolate', description: 'Candy', unit_price: 7.99, id: 4, merchant_id: 3)
+          item5 = Item.create!(name: 'Abba Zabba', description: 'Weird', unit_price: 5.99, id: 5, merchant_id: 3)
+          item6 = Item.create!(name: 'Sour Patch Watermelons', description: 'Dank', unit_price: 7.99, id: 6, merchant_id: 3)
+
+          get '/api/v1/items/find?min_price=3.99&max_price=6.20'
+
+          expect(response).to be_successful
+
+          item = JSON.parse(response.body, symbolize_names: true)
+
+          expect(item.count).to eq(1)
+          expect(item[:data]).to be_a(Hash)
+
+          expect(item[:data][:attributes]).to have_key(:name)
+          expect(item[:data][:attributes][:name]).to eq("Abba Zabba")
+
+          expect(item[:data][:attributes]).to have_key(:description)
+          expect(item[:data][:attributes][:description]).to eq("Weird")
+
+          expect(item[:data][:attributes]).to have_key(:unit_price)
+          expect(item[:data][:attributes][:unit_price]).to eq(5.99)
+
+          expect(item[:data][:attributes]).to have_key(:merchant_id)
+          expect(item[:data][:attributes][:merchant_id]).to eq(3)
+        end
       end
 
       describe 'Sad Path' do
@@ -510,6 +578,45 @@ describe "Items API" do
           expect(item[:errors]).to be_a(Array)
           expect(item[:errors].first[:status]).to eq("400")
           expect(item[:errors].first[:title]).to eq("Cannot have name and price range at the same time")
+        end
+
+        it 'returns a 400 error if min_price is negative' do
+          get '/api/v1/items/find?min_price=-50'
+    
+          expect(response).to_not be_successful
+          expect(response.status).to eq(400)
+
+          item = JSON.parse(response.body, symbolize_names: true)
+
+          expect(item[:errors]).to be_a(Array)
+          expect(item[:errors].first[:status]).to eq("400")
+          expect(item[:errors].first[:title]).to eq("Minimum price cannot be negative")
+        end
+
+        it 'returns a 400 error if max_price is negative' do
+          get '/api/v1/items/find?max_price=-50'
+    
+          expect(response).to_not be_successful
+          expect(response.status).to eq(400)
+
+          item = JSON.parse(response.body, symbolize_names: true)
+
+          expect(item[:errors]).to be_a(Array)
+          expect(item[:errors].first[:status]).to eq("400")
+          expect(item[:errors].first[:title]).to eq("Maximum price cannot be negative")
+        end
+
+        it 'returns a 400 error if max_price is negative' do
+          get '/api/v1/items/find?max_price=50&min_price=51'
+    
+          expect(response).to_not be_successful
+          expect(response.status).to eq(400)
+
+          item = JSON.parse(response.body, symbolize_names: true)
+
+          expect(item[:errors]).to be_a(Array)
+          expect(item[:errors].first[:status]).to eq("400")
+          expect(item[:errors].first[:title]).to eq("Price range cannot be negative")
         end
       end
     end

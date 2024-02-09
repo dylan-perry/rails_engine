@@ -6,17 +6,17 @@ class Api::V1::Items::SearchController < ApplicationController
         if params.key?(:name) && (!params.key?(:min_price) && !params.key?(:max_price))
             item = Item.where("name ILIKE ?", "%#{params[:name]}%").order(name: :asc).first
         elsif params.key?(:min_price) && (!params.key?(:name) && !params.key?(:max_price))
-            item = Item.where("unit_price >= ?", "#{params[:min_price].to_f}").order(name: :asc).first
+            item = Item.where("unit_price >= ?", params[:min_price].to_f).order(name: :asc).first
         elsif params.key?(:max_price) && (!params.key?(:name) && !params.key?(:min_price))
-            item = Item.where("unit_price <= ?", "#{params[:max_price].to_f}").order(name: :asc).first
+            item = Item.where("unit_price <= ?", params[:max_price].to_f).order(name: :asc).first
         elsif (params.key?(:name) && params.key?(:min_price)) && !params.key?(:max_price)
-            item = Item.where("name ILIKE ? AND unit_price >= ?", "%#{params[:name]}%, #{params[:min_price].to_f}").order(name: :asc).first
+            item = Item.where("name ILIKE ? AND unit_price >= ?", "%#{params[:name]}%", params[:min_price].to_f).order(name: :asc).first
         elsif (params.key?(:name) && params.key?(:max_price)) && !params.key?(:min_price)
-            item = Item.where("name ILIKE ? AND unit_price <= ?", "%#{params[:name]}%, #{params[:max_price].to_f}").order(name: :asc).first
+            item = Item.where("name ILIKE ? AND unit_price <= ?", "%#{params[:name]}%", params[:max_price].to_f).order(name: :asc).first
         elsif (params.key?(:min_price) && params.key?(:max_price)) && !params.key?(:name)
-            item = Item.where("unit_price >= ? AND unit_price <= ?", "#{params[:min_price].to_f}, #{params[:max_price].to_f}").order(name: :asc).first
+            item = Item.where("unit_price >= ? AND unit_price <= ?", params[:min_price].to_f, params[:max_price].to_f).order(name: :asc).first
         elsif params.key?(:name) && params.key?(:min_price) && params.key?(:max_price)
-            item = Item.where("name ILIKE ? AND unit_price >= ? AND unit_price <= ?", "%#{params[:name]}%, #{params[:min_price].to_f}, #{params[:max_price].to_f}").order(name: :asc).first
+            item = Item.where("name ILIKE ? AND unit_price >= ? AND unit_price <= ?", "%#{params[:name]}%", params[:min_price].to_f, params[:max_price].to_f).order(name: :asc).first
         end
 
         if item == nil
@@ -56,7 +56,7 @@ private
     end
 
     # if min_price AND max_price were passed, and max_price minus min_price is negative, error out
-    if (!params[:min_price].nil? && !params[:max_price].nil?) && (params[:max_price] - params[:min_price]).to_f.negative?
+    if (!params[:min_price].nil? && !params[:max_price].nil?) && (params[:max_price].to_f - params[:min_price].to_f).negative?
         raise ActionController::BadRequest, 'Price range cannot be negative'
     end
   end
