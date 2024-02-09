@@ -167,7 +167,7 @@ describe "Items API" do
           expect(data[:errors].first[:title]).to eq("Couldn't find Merchant without an ID")
         end
 
-        it 'returns a 422 if item attribute is missing' do
+        it "returns a 422 if item attribute is missing and can't save the item creation" do
           merchant = create(:merchant, id: 1)
 
           item_params = ({
@@ -290,7 +290,7 @@ describe "Items API" do
             expect(response.status).to eq(404)
   
             data = JSON.parse(response.body, symbolize_names: true)
-            
+            require 'pry';binding.pry
             expect(data[:errors]).to be_a(Array)
             expect(data[:errors].first[:status]).to eq("404")
             expect(data[:errors].first[:title]).to eq("Couldn't find Merchant with 'id'=999999")
@@ -409,6 +409,73 @@ describe "Items API" do
 
           expect(item[:data][:attributes]).to have_key(:merchant_id)
           expect(item[:data][:attributes][:merchant_id]).to eq(1)
+        end
+      end
+
+      describe 'Sad Path' do
+        it 'returns an error if the parameter is missing' do
+          get '/api/v1/items/find'
+
+          expect(response).to_not be_successful
+          expect(response.status).to eq(400)
+
+          data = JSON.parse(response.body, symbolize_names: true)
+
+          expect(data[:errors]).to be_a(Array)
+          expect(data[:errors].first[:status]).to eq("400")
+          expect(data[:errors].first[:title]).to eq("Must have either name or price range")
+        end
+
+        it 'returns a 400 error if the parameter is empty due to bad request' do
+          get '/api/v1/items/find?name='
+    
+          expect(response).to_not be_successful
+          expect(response.status).to eq(400)
+
+          data = JSON.parse(response.body, symbolize_names: true)
+
+          expect(data[:errors]).to be_a(Array)
+          expect(data[:errors].first[:status]).to eq("400")
+          expect(data[:errors].first[:title]).to eq("Item not found")
+        end
+
+        it 'returns a 400 error if the parameter has both name and min_price' do
+          get '/api/v1/items/find?name=ring&min_price=50'
+    
+          expect(response).to_not be_successful
+          expect(response.status).to eq(400)
+
+          data = JSON.parse(response.body, symbolize_names: true)
+
+          expect(data[:errors]).to be_a(Array)
+          expect(data[:errors].first[:status]).to eq("400")
+          expect(data[:errors].first[:title]).to eq("Cannot have name and price range at the same time")
+        end
+
+        it 'returns a 400 error if the parameter has both name and max_price' do
+          get '/api/v1/items/find?name=ring&min_price=50'
+    
+          expect(response).to_not be_successful
+          expect(response.status).to eq(400)
+
+          data = JSON.parse(response.body, symbolize_names: true)
+
+          expect(data[:errors]).to be_a(Array)
+          expect(data[:errors].first[:status]).to eq("400")
+          expect(data[:errors].first[:title]).to eq("Cannot have name and price range at the same time")
+        end
+
+        it 'returns a 400 error if the parameter has both name and min_price & max_price' do
+          get '/api/v1/items/find?name=ring&min_price=50'
+    
+          expect(response).to_not be_successful
+          expect(response.status).to eq(400)
+
+          data = JSON.parse(response.body, symbolize_names: true)
+
+          expect(data[:errors]).to be_a(Array)
+          expect(data[:errors].first[:status]).to eq("400")
+          expect(data[:errors].first[:title]).to eq("Cannot have name and price range at the same time")
         end
       end
     end
