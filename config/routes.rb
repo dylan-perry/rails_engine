@@ -10,6 +10,7 @@ Rails.application.routes.draw do
 
   namespace :api do
     namespace :v1 do
+      get '/merchants/find_all', to: 'merchants/search#find_all'
       resources :merchants, only: [:index, :show] do
         resources :items, only: [:index], module: :merchants # module block to scope the items controller under merchants 
       end 

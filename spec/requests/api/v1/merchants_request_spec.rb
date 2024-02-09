@@ -104,4 +104,62 @@ RSpec.describe 'Merchants API' do
       end
     end
   end
+
+  # US 11
+  describe 'Find all Merchants' do
+    describe 'happy path' do
+      it 'can find all merchants which matching a name attribute (including partial names) in case-insensitive alphabetical order' do
+          merchant1 = Merchant.create!(name: 'Amazon')
+          merchant2 = Merchant.create!(name: 'Amazon Fresh')
+          merchant3 = Merchant.create!(name: 'Walmart')
+          merchant4 = Merchant.create!(name: 'Target')
+          merchant5 = Merchant.create!(name: 'Best Buy')
+
+          get '/api/v1/merchants/find_all?name=amaz'
+
+          expect(response).to be_successful
+
+          merchants = JSON.parse(response.body, symbolize_names: true)
+
+          expect(merchants).to be_a(Hash)
+          expect(merchants[:data].count).to eq(2)
+
+          results = []
+
+          merchants[:data].each do |merchant|
+            expect(merchant[:attributes]).to have_key(:name)
+            expect(merchant[:attributes][:name]).to be_an(String)
+            results << merchant[:attributes][:name]
+          end
+
+          expect(results).to eq(['Amazon', 'Amazon Fresh'])
+      end
+    end
+    
+    describe 'sad path' do
+      it 'returns a 200 response when search is successful, but returns no results' do
+        get '/api/v1/merchants/find_all?name='
+  
+        expect(response).to be_successful
+        expect(response.status).to eq(200)
+  
+        merchant = JSON.parse(response.body, symbolize_names: true)
+        
+        expect(merchant[:data]).to be_a(Array)
+        expect(merchant[:data]).to eq([])
+      end
+
+      it 'returns a 200 response if the parameter is missing' do
+        get '/api/v1/merchants/find_all'
+
+        expect(response).to be_successful
+        expect(response.status).to eq(200)
+
+        merchant = JSON.parse(response.body, symbolize_names: true)
+
+        expect(merchant[:data]).to be_a(Array)
+        expect(merchant[:data]).to eq([])
+      end
+    end
+  end
 end

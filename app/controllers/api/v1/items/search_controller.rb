@@ -2,7 +2,6 @@ class Api::V1::Items::SearchController < ApplicationController
   before_action :validate_params, only: [:find]
 
     def find
-        
         if params.key?(:name) && (!params.key?(:min_price) && !params.key?(:max_price))
             item = Item.where("name ILIKE ?", "%#{params[:name]}%").order(name: :asc).first
         elsif params.key?(:min_price) && (!params.key?(:name) && !params.key?(:max_price))
