@@ -399,16 +399,16 @@ describe "Items API" do
           expect(item[:data]).to be_a(Hash)
 
           expect(item[:data][:attributes]).to have_key(:name)
-          expect(item[:data][:attributes].name).to be("Hersheys Chocolate")
+          expect(item[:data][:attributes][:name]).to eq("Hersheys Chocolate")
 
           expect(item[:data][:attributes]).to have_key(:description)
-          expect(item[:data][:attributes].description).to be("Candy")
+          expect(item[:data][:attributes][:description]).to eq("Candy")
 
           expect(item[:data][:attributes]).to have_key(:unit_price)
-          expect(item[:data][:attributes].unit_price).to be(3.99)
+          expect(item[:data][:attributes][:unit_price]).to eq(3.99)
 
           expect(item[:data][:attributes]).to have_key(:merchant_id)
-          expect(item[:data][:attributes].merchant_id).to be(1)
+          expect(item[:data][:attributes][:merchant_id]).to eq(1)
         end
       end
     end
