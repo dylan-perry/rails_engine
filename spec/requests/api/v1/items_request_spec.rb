@@ -457,7 +457,7 @@ describe "Items API" do
           expect(item[:data][:attributes][:merchant_id]).to eq(3)
         end
 
-        it 'can find the first item matching a min_price attribute in case-insensitive alphabetical order' do
+        it 'can find the first item matching a max_price attribute in case-insensitive alphabetical order' do
           merchant1 = create(:merchant, id: 1)
           merchant2 = create(:merchant, id: 2)
           merchant3 = create(:merchant, id: 3)
@@ -606,7 +606,7 @@ describe "Items API" do
           expect(item[:errors].first[:title]).to eq("Maximum price cannot be negative")
         end
 
-        it 'returns a 400 error if max_price is negative' do
+        it 'returns a 400 error if max_price minus min_price is negative' do
           get '/api/v1/items/find?max_price=50&min_price=51'
     
           expect(response).to_not be_successful
